@@ -176,7 +176,8 @@ const handleLogout = () => {
 .main-content {
   flex: 1;
   padding: 20px;
-  background: #f5f5f5;
+  background: #f5f5f5 url('/backgrounds/admin-bg.svg') no-repeat center top;
+  background-size: cover;
 }
 
 .report-badge {

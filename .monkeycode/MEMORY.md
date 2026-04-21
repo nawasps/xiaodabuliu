@@ -73,3 +73,10 @@ Agent 在任务执行过程中发现的条目应遵循以下格式：
 - Instructions:
   - 后续优先直接在 `master` 上操作，或在完成后自动合并回 `master`
   - 本次改动也需要合并到 `master`，保证可直接拉取测试
+
+[OSS配置交付偏好]
+- Date: 2026-04-21
+- Context: 用户要求接入阿里云OSS并自行本地填入密钥
+- Instructions:
+  - 代码中涉及 OSS 的 AccessKey/Secret/Endpoint 等配置项先留空占位
+  - 如需数据库变更，需明确告知用户在本地手动执行

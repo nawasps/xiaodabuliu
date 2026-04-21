@@ -32,6 +32,20 @@
             <el-option v-for="tag in tags" :key="tag.id" :label="tag.name" :value="tag.name" />
           </el-select>
         </el-form-item>
+        <el-form-item label="书籍图片" prop="images">
+          <el-upload
+            list-type="picture-card"
+            :file-list="imageFileList"
+            :http-request="handleImageUpload"
+            :on-remove="handleImageRemove"
+            :before-upload="beforeImageUpload"
+            :limit="6"
+            :on-exceed="handleExceed"
+          >
+            <el-icon><Plus /></el-icon>
+          </el-upload>
+          <div class="upload-tip">最多上传6张，支持 jpg/png/webp，单张不超过5MB</div>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSubmit" :loading="loading">
             {{ isEdit ? '保存修改' : '发布' }}
@@ -47,8 +61,10 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
 import { publishBook, updateBook, getBookById } from '@/api/book'
 import { getCategoryTree } from '@/api/category'
+import { uploadBookImage } from '@/api/upload'
 import request from '@/utils/request'
 
 const router = useRouter()
@@ -65,16 +81,63 @@ const form = ref({
   condition: '',
   price: 0,
   originalPrice: 0,
+  images: [],
   tags: []
 })
 const categories = ref([])
 const tags = ref([])
+const imageFileList = ref([])
 
 const rules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }],
   condition: [{ required: true, message: '请选择新旧程度', trigger: 'change' }],
+  images: [{ required: true, type: 'array', min: 1, message: '请至少上传1张图片', trigger: 'change' }],
   price: [{ required: true, message: '请输入价格', trigger: 'blur' }]
+}
+
+const syncImageListToForm = () => {
+  form.value.images = imageFileList.value.map(item => item.url)
+}
+
+const beforeImageUpload = (file) => {
+  const isImage = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
+  if (!isImage) {
+    ElMessage.error('仅支持 JPG、PNG、WEBP 格式图片')
+    return false
+  }
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过5MB')
+    return false
+  }
+  return true
+}
+
+const handleImageUpload = async (options) => {
+  try {
+    const res = await uploadBookImage(options.file)
+    const url = res.data?.url
+    if (!url) {
+      throw new Error('上传失败')
+    }
+    imageFileList.value.push({ name: options.file.name, url })
+    syncImageListToForm()
+    ElMessage.success('图片上传成功')
+    options.onSuccess(res)
+  } catch (error) {
+    ElMessage.error(error.message || '图片上传失败')
+    options.onError(error)
+  }
+}
+
+const handleImageRemove = (file) => {
+  imageFileList.value = imageFileList.value.filter(item => item.url !== file.url)
+  syncImageListToForm()
+}
+
+const handleExceed = () => {
+  ElMessage.warning('最多上传6张图片')
 }
 
 const transformCategory = (data) => {
@@ -89,7 +152,7 @@ onMounted(async () => {
   try {
     const catRes = await getCategoryTree()
     categories.value = transformCategory(catRes.data || [])
-    const tagRes = await request.get('/admin/tag/list')
+    const tagRes = await request.get('/tag/list')
     tags.value = tagRes.data || []
 
     if (isEdit.value) {
@@ -103,8 +166,13 @@ onMounted(async () => {
           condition: book.condition || '',
           price: book.price || 0,
           originalPrice: book.originalPrice || 0,
+          images: book.images || [],
           tags: book.tags || []
         }
+        imageFileList.value = (book.images || []).map((url, index) => ({
+          name: `book-image-${index + 1}`,
+          url
+        }))
       }
     }
   } catch (error) {
@@ -127,6 +195,7 @@ const handleSubmit = async () => {
       condition: form.value.condition,
       price: form.value.price,
       originalPrice: form.value.originalPrice,
+      images: form.value.images,
       tags: form.value.tags
     }
 
@@ -152,6 +221,18 @@ const handleSubmit = async () => {
 
   h2 {
     margin-bottom: 20px;
+  }
+
+  :deep(.el-upload--picture-card),
+  :deep(.el-upload-list__item) {
+    width: 120px;
+    height: 120px;
+  }
+
+  .upload-tip {
+    margin-top: 8px;
+    color: #8c8c8c;
+    font-size: 12px;
   }
 }
 </style>

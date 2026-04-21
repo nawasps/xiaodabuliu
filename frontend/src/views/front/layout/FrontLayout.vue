@@ -172,6 +172,7 @@ case 'admin':
 
 .main-content {
   flex: 1;
+  background: transparent;
 }
 
 .footer {

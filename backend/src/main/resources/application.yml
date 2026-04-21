@@ -62,3 +62,11 @@ logging:
       max-file-size: 100MB
       max-history: 30
       total-size-cap: 10GB
+
+aliyun:
+  oss:
+    endpoint:
+    bucket-name:
+    access-key-id:
+    access-key-secret:
+    domain:

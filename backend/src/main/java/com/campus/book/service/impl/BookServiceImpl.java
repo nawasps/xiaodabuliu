@@ -100,14 +100,14 @@ public class BookServiceImpl implements BookService {
         book.setSellerNickname(user.getNickname());
 
         try {
-            book.setImages(objectMapper.writeValueAsString(dto.getImages()));
+            book.setImages(objectMapper.writeValueAsString(dto.getImages() == null ? Collections.emptyList() : dto.getImages()));
         } catch (JsonProcessingException e) {
             LogUtils.logError(logger, "序列化图书图片失败", e);
             book.setImages("[]");
         }
 
         try {
-            book.setTags(objectMapper.writeValueAsString(dto.getTags()));
+            book.setTags(objectMapper.writeValueAsString(dto.getTags() == null ? Collections.emptyList() : dto.getTags()));
         } catch (JsonProcessingException e) {
             LogUtils.logError(logger, "序列化图书标签失败", e);
             book.setTags("[]");
@@ -150,13 +150,13 @@ public class BookServiceImpl implements BookService {
         }
 
         try {
-            book.setImages(objectMapper.writeValueAsString(dto.getImages()));
+            book.setImages(objectMapper.writeValueAsString(dto.getImages() == null ? Collections.emptyList() : dto.getImages()));
         } catch (JsonProcessingException e) {
             book.setImages("[]");
         }
 
         try {
-            book.setTags(objectMapper.writeValueAsString(dto.getTags()));
+            book.setTags(objectMapper.writeValueAsString(dto.getTags() == null ? Collections.emptyList() : dto.getTags()));
         } catch (JsonProcessingException e) {
             book.setTags("[]");
         }
