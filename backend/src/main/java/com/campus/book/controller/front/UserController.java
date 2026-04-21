@@ -11,6 +11,7 @@ import com.campus.book.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,21 @@ public class UserController {
     @PostMapping("/register")
     public Result<Map<String, Object>> register(@Validated @RequestBody UserRegisterDTO dto) {
         logger.info("用户注册请求: username={}", dto.getUsername());
+
+        String registerType = StringUtils.hasText(dto.getRegisterType()) ? dto.getRegisterType().toUpperCase() : "PHONE";
+        if ("PHONE".equals(registerType) && !StringUtils.hasText(dto.getPhone())) {
+            return Result.error(400, "手机号注册时手机号不能为空");
+        }
+        if ("EMAIL".equals(registerType)) {
+            if (!StringUtils.hasText(dto.getEmail())) {
+                return Result.error(400, "邮箱注册时邮箱不能为空");
+            }
+            try {
+                userService.validateEmailVerifyCode(dto.getEmail(), dto.getVerifyCode());
+            } catch (RuntimeException e) {
+                return Result.error(400, e.getMessage());
+            }
+        }
         
         if (userService.isUsernameExists(dto.getUsername())) {
             logger.warn("注册失败: 用户名已存在 - {}", dto.getUsername());
@@ -140,6 +156,13 @@ public class UserController {
     public Result<Void> sendVerifyCode(@RequestBody Map<String, String> params) {
         String phone = params.get("phone");
         userService.sendVerifyCode(phone);
+        return Result.success();
+    }
+
+    @PostMapping("/sendEmailCode")
+    public Result<Void> sendEmailVerifyCode(@RequestBody Map<String, String> params) {
+        String email = params.get("email");
+        userService.sendEmailVerifyCode(email);
         return Result.success();
     }
 

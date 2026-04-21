@@ -18,6 +18,9 @@ public class UserRegisterDTO {
     @Pattern(regexp = "^$|^\\w+@\\w+\\.\\w+$", message = "邮箱格式不正确")
     private String email;
 
+    @Pattern(regexp = "^(PHONE|EMAIL)?$", message = "注册类型不正确")
+    private String registerType;
+
     private String nickname;
 
     private String verifyCode;

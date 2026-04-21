@@ -28,6 +28,10 @@ export function sendVerifyCode(phone) {
   return request.post('/user/sendCode', { phone })
 }
 
+export function sendEmailVerifyCode(email) {
+  return request.post('/user/sendEmailCode', { email })
+}
+
 export function resetPassword(data) {
   return request.post('/user/resetPassword', data)
 }

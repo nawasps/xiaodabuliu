@@ -23,6 +23,10 @@ public interface UserService {
 
     void sendVerifyCode(String phone);
 
+    void sendEmailVerifyCode(String email);
+
+    void validateEmailVerifyCode(String email, String verifyCode);
+
     UserVO getUserById(Long userId);
 
     boolean isUsernameExists(String username);

@@ -16,7 +16,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,6 +48,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    @Value("${spring.mail.username:}")
+    private String mailFrom;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -230,6 +239,60 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             LogUtils.logError(logger, "发送验证码失败 - Redis错误", e);
             logger.error("Redis错误: {}", e.getMessage());
         }
+    }
+
+    @Override
+    public void sendEmailVerifyCode(String email) {
+        if (!StringUtils.hasText(email) || !email.matches("^\\w+@\\w+\\.\\w+$")) {
+            throw new RuntimeException("请输入正确的邮箱");
+        }
+        if (isEmailExists(email)) {
+            throw new RuntimeException("邮箱已存在");
+        }
+        if (!StringUtils.hasText(mailFrom)) {
+            throw new RuntimeException("邮箱服务未配置，请先填写邮件配置");
+        }
+
+        String cacheKey = buildEmailVerifyCodeKey(email);
+        String code = String.valueOf(new Random().nextInt(900000) + 100000);
+        stringRedisTemplate.opsForValue().set(cacheKey, code, 5, TimeUnit.MINUTES);
+
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(mailFrom);
+            message.setTo(email);
+            message.setSubject("校园二手书 - 邮箱验证码");
+            message.setText("您的注册验证码是：" + code + "，5分钟内有效。如非本人操作请忽略。");
+            mailSender.send(message);
+            logger.info("邮箱验证码发送成功: email={}", email);
+        } catch (Exception e) {
+            logger.error("邮箱验证码发送失败: email={}, error={}", email, e.getMessage());
+            throw new RuntimeException("验证码发送失败，请稍后重试");
+        }
+    }
+
+    @Override
+    public void validateEmailVerifyCode(String email, String verifyCode) {
+        if (!StringUtils.hasText(email)) {
+            throw new RuntimeException("邮箱不能为空");
+        }
+        if (!StringUtils.hasText(verifyCode)) {
+            throw new RuntimeException("邮箱验证码不能为空");
+        }
+
+        String cacheKey = buildEmailVerifyCodeKey(email);
+        String cachedCode = stringRedisTemplate.opsForValue().get(cacheKey);
+        if (!StringUtils.hasText(cachedCode)) {
+            throw new RuntimeException("邮箱验证码已过期，请重新获取");
+        }
+        if (!verifyCode.equals(cachedCode)) {
+            throw new RuntimeException("邮箱验证码错误");
+        }
+        stringRedisTemplate.delete(cacheKey);
+    }
+
+    private String buildEmailVerifyCodeKey(String email) {
+        return "verify:email:register:" + email;
     }
 
     @Override
