@@ -1,0 +1,36 @@
+# 日志文件
+logs/
+*.log
+backend/logs/
+
+# 编译输出
+target/
+backend/target/
+frontend/node_modules/
+frontend/dist/
+
+# IDE配置
+.idea/
+.vscode/
+*.iml
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.swp
+*~
+
+# Node相关
+frontend/.env.local
+frontend/.env.*.local
+
+# Maven
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+
+# Docker
+docker-compose.override.yml
