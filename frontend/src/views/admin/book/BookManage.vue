@@ -4,6 +4,7 @@
       <el-input v-model="keyword" placeholder="搜索商品" style="width: 300px;" @keyup.enter="loadBooks" />
       <el-select v-model="status" placeholder="商品状态" style="width: 150px;" @change="loadBooks">
         <el-option label="全部" value="" />
+        <el-option label="待审核" value="PENDING" />
         <el-option label="在售" value="ON_SALE" />
         <el-option label="已售" value="SOLD" />
         <el-option label="下架" value="OFFLINE" />
@@ -21,7 +22,7 @@
       <el-table-column prop="sellerNickname" label="卖家" />
       <el-table-column prop="status" label="状态">
         <template #default="{ row }">
-          <el-tag :type="getStatusType(row.status)">{{ row.status }}</el-tag>
+          <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="200">
@@ -56,8 +57,13 @@ const pageSize = ref(10)
 const total = ref(0)
 
 const getStatusType = (status) => {
-  const map = { 'ON_SALE': 'success', 'SOLD': 'warning', 'OFFLINE': 'info', 'RESERVED': '' }
+  const map = { 'PENDING': 'warning', 'ON_SALE': 'success', 'SOLD': 'warning', 'OFFLINE': 'info', 'RESERVED': '' }
   return map[status] || ''
+}
+
+const getStatusText = (status) => {
+  const map = { 'PENDING': '待审核', 'ON_SALE': '在售', 'SOLD': '已售', 'OFFLINE': '下架', 'RESERVED': '已预订' }
+  return map[status] || status
 }
 
 const loadBooks = async () => {
@@ -76,10 +82,23 @@ const loadBooks = async () => {
 }
 
 const handleAudit = async (row) => {
-  await ElMessageBox.confirm('审核通过该商品？', '审核')
-  await request.put(`/admin/book/${row.id}/audit`, null, { params: { status: 'ON_SALE' } })
-  ElMessage.success('审核通过')
-  loadBooks()
+  try {
+    await ElMessageBox.confirm('审核通过该商品？点击取消将驳回并下架。', '商品审核', {
+      confirmButtonText: '通过',
+      cancelButtonText: '驳回',
+      distinguishCancelAndClose: true,
+      type: 'warning'
+    })
+    await request.put(`/admin/book/${row.id}/audit`, null, { params: { status: 'ON_SALE' } })
+    ElMessage.success('审核通过')
+    loadBooks()
+  } catch (error) {
+    if (error === 'cancel') {
+      await request.put(`/admin/book/${row.id}/audit`, null, { params: { status: 'OFFLINE' } })
+      ElMessage.success('已驳回并下架')
+      loadBooks()
+    }
+  }
 }
 
 const handleOffline = async (row) => {

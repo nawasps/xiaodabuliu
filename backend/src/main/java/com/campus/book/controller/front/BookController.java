@@ -36,8 +36,9 @@ public class BookController {
 
     @GetMapping("/{id}")
     public Result<BookVO> getBookById(@PathVariable Long id) {
+        BookVO book = bookService.getBookById(id);
         bookService.incrementViewCount(id);
-        return Result.success(bookService.getBookById(id));
+        return Result.success(book);
     }
 
     @GetMapping("/list")

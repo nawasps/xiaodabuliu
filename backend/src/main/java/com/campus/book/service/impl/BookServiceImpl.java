@@ -113,7 +113,7 @@ public class BookServiceImpl implements BookService {
             book.setTags("[]");
         }
 
-        book.setStatus(Constants.STATUS_ON_SALE);
+        book.setStatus(Constants.STATUS_PENDING);
         book.setViewCount(0);
         book.setFavoriteCount(0);
         book.setIsRecommended(0);
@@ -161,6 +161,10 @@ public class BookServiceImpl implements BookService {
             book.setTags("[]");
         }
 
+        if (!SecurityUtils.isAdmin()) {
+            book.setStatus(Constants.STATUS_PENDING);
+        }
+
         bookMapper.updateById(book);
         return convertToVO(book);
     }
@@ -194,6 +198,27 @@ public class BookServiceImpl implements BookService {
         if (book == null) {
             throw new RuntimeException("商品不存在");
         }
+
+        Long currentUserId = null;
+        try {
+            currentUserId = SecurityUtils.getCurrentUserId();
+        } catch (Exception e) {
+        }
+        boolean isAdmin = false;
+        try {
+            isAdmin = SecurityUtils.isAdmin();
+        } catch (Exception e) {
+        }
+
+        boolean canAccess = Constants.STATUS_ON_SALE.equals(book.getStatus())
+                || Constants.STATUS_SOLD.equals(book.getStatus())
+                || Constants.STATUS_RESERVED.equals(book.getStatus())
+                || isAdmin
+                || (currentUserId != null && currentUserId.equals(book.getUserId()));
+        if (!canAccess) {
+            throw new RuntimeException("商品正在审核中");
+        }
+
         return convertToVO(book);
     }
 
@@ -381,9 +406,17 @@ public class BookServiceImpl implements BookService {
         if (book == null) {
             throw new RuntimeException("商品不存在");
         }
-        if (!book.getUserId().equals(SecurityUtils.getCurrentUserId()) && !SecurityUtils.isAdmin()) {
+
+        boolean isAdmin = SecurityUtils.isAdmin();
+        boolean isOwner = book.getUserId().equals(SecurityUtils.getCurrentUserId());
+        if (!isOwner && !isAdmin) {
             throw new RuntimeException("无权修改此商品状态");
         }
+
+        if (!isAdmin && !Constants.STATUS_OFFLINE.equals(status)) {
+            throw new RuntimeException("仅管理员可变更为该状态");
+        }
+
         book.setStatus(status);
         bookMapper.updateById(book);
     }

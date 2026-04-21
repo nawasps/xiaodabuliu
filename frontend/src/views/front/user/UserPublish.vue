@@ -1,9 +1,3 @@
-
-变更 2：UserPublish.vue
-文件: frontend/src/views/front/user/UserPublish.vue
-
-完整替换为以下内容：
-
 <template>
   <div class="publish-page">
     <div class="page-container">
@@ -138,10 +132,10 @@ const handleSubmit = async () => {
 
     if (isEdit.value) {
       await updateBook(bookId.value, submitData)
-      ElMessage.success('修改成功')
+      ElMessage.success('修改成功，已重新进入审核')
     } else {
       await publishBook(submitData)
-      ElMessage.success('发布成功')
+      ElMessage.success('发布成功，等待管理员审核')
     }
     router.push('/user/my-books')
   } catch (error) {

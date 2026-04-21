@@ -13,7 +13,7 @@
         <el-table-column prop="condition" label="新旧程度" />
         <el-table-column prop="status" label="状态">
           <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">{{ row.status }}</el-tag>
+            <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="viewCount" label="浏览量" />
@@ -38,8 +38,13 @@ const books = ref([])
 const loading = ref(false)
 
 const getStatusType = (status) => {
-  const map = { 'ON_SALE': 'success', 'SOLD': 'warning', 'RESERVED': '', 'OFFLINE': 'info' }
+  const map = { 'PENDING': 'warning', 'ON_SALE': 'success', 'SOLD': 'warning', 'RESERVED': '', 'OFFLINE': 'info' }
   return map[status] || ''
+}
+
+const getStatusText = (status) => {
+  const map = { 'PENDING': '待审核', 'ON_SALE': '在售', 'SOLD': '已售', 'RESERVED': '已预订', 'OFFLINE': '下架' }
+  return map[status] || status
 }
 
 const loadBooks = async () => {
