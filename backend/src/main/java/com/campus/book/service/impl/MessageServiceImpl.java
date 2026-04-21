@@ -189,10 +189,14 @@ public class MessageServiceImpl implements MessageService {
         if (simpMessagingTemplate == null || message == null || message.getToUserId() == null) {
             return;
         }
+        User toUser = userMapper.selectById(message.getToUserId());
+        if (toUser == null || !StringUtils.hasText(toUser.getUsername())) {
+            return;
+        }
         MessageVO messageVO = convertToVO(message);
-        simpMessagingTemplate.convertAndSend("/topic/message/" + message.getToUserId(), messageVO);
+        simpMessagingTemplate.convertAndSendToUser(toUser.getUsername(), "/queue/message", messageVO);
         if (Constants.MESSAGE_TYPE_PRIVATE.equals(message.getType())) {
-            simpMessagingTemplate.convertAndSend("/topic/chat/" + message.getToUserId(), messageVO);
+            simpMessagingTemplate.convertAndSendToUser(toUser.getUsername(), "/queue/chat", messageVO);
         }
     }
 }

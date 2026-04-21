@@ -58,7 +58,6 @@ import { connectChatSocket, disconnectChatSocket, getChatSocketClient } from '@/
 
 const messageStore = useMessageStore()
 const router = useRouter()
-const currentUserId = Number(JSON.parse(localStorage.getItem('userInfo') || '{}')?.id || 0)
 const activeTab = ref('SYSTEM')
 const messages = ref([])
 let subscription = null
@@ -81,7 +80,7 @@ const handleReply = (msg) => {
 }
 
 const bindSocket = () => {
-  if (!currentUserId) {
+  if (!localStorage.getItem('token')) {
     return
   }
   connectChatSocket((client) => {
@@ -89,7 +88,7 @@ const bindSocket = () => {
       subscription.unsubscribe()
       subscription = null
     }
-    subscription = client.subscribe(`/topic/message/${currentUserId}`, async () => {
+    subscription = client.subscribe('/user/queue/message', async () => {
       await messageStore.fetchUnreadCount()
       if (activeTab.value === 'PRIVATE') {
         await loadMessages()

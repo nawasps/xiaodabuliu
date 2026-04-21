@@ -83,7 +83,7 @@ const bindSocket = () => {
       subscription.unsubscribe()
       subscription = null
     }
-    subscription = client.subscribe(`/topic/chat/${currentUserId}`, async (frame) => {
+    subscription = client.subscribe('/user/queue/chat', async (frame) => {
       const payload = JSON.parse(frame.body)
       const isCurrentConversation =
         (payload.fromUserId === peerUserId.value && payload.toUserId === currentUserId) ||
