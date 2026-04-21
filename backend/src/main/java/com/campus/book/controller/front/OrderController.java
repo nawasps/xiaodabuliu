@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.book.common.result.Result;
 import com.campus.book.dto.OrderCreateDTO;
 import com.campus.book.service.OrderService;
+import com.campus.book.service.PaymentService;
 import com.campus.book.util.LogUtils;
 import com.campus.book.util.SecurityUtils;
 import com.campus.book.vo.OrderVO;
@@ -14,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -24,6 +26,9 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private PaymentService paymentService;
 
     @PostMapping
     public Result<OrderVO> createOrder(@Validated @RequestBody OrderCreateDTO dto) {
@@ -70,6 +75,15 @@ public class OrderController {
         logger.info("订单支付成功: orderId={}, userId={}", id, userId);
         
         return Result.success();
+    }
+
+    @GetMapping("/{id}/pay/alipay/form")
+    public Result<Map<String, String>> createAlipayPayForm(@PathVariable Long id) {
+        String payForm = paymentService.createAlipayPagePayForm(id);
+        Map<String, String> data = new HashMap<>();
+        data.put("provider", "ALIPAY_SANDBOX");
+        data.put("payForm", payForm);
+        return Result.success(data);
     }
 
     @PutMapping("/{id}/ship")

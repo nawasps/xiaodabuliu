@@ -20,6 +20,10 @@ export function payOrder(id) {
   return request.put('/order/' + id + '/pay')
 }
 
+export function createAlipayPayForm(id) {
+  return request.get('/order/' + id + '/pay/alipay/form')
+}
+
 export function shipOrder(id, trackingNo) {
   return request.put('/order/' + id + '/ship', { trackingNo })
 }

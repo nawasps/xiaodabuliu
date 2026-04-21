@@ -70,3 +70,13 @@ aliyun:
     access-key-id:
     access-key-secret:
     domain:
+
+payment:
+  alipay:
+    enabled: false
+    gateway-url: https://openapi-sandbox.dl.alipaydev.com/gateway.do
+    app-id:
+    private-key:
+    alipay-public-key:
+    return-url:
+    notify-url:

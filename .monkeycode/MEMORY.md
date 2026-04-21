@@ -93,6 +93,13 @@ Agent 在任务执行过程中发现的条目应遵循以下格式：
 - Context: Agent 在执行“新增实时聊天功能”时发现
 - Category: 代码模式
 - Instructions:
-  - 后端采用 Spring WebSocket + STOMP，端点为 `/ws`，推送频道为 `/topic/message/{userId}` 与 `/topic/chat/{userId}`
-  - 前端采用 `@stomp/stompjs + sockjs-client`，在聊天页与消息中心订阅用户频道实现实时更新
+  - 后端采用 Spring WebSocket + STOMP，端点为 `/ws`，订阅队列为 `/user/queue/message` 与 `/user/queue/chat`
+  - 前端采用 `@stomp/stompjs + sockjs-client`，在聊天页与消息中心订阅用户队列实现实时更新
   - 聊天消息仍复用现有 `b_message` 表存储，不新增数据库表
+
+[支付接入策略]
+- Date: 2026-04-21
+- Context: 用户提出保留模拟支付并增加真实三方沙箱调起
+- Instructions:
+  - 支付页同时保留“模拟支付”与“真实三方沙箱支付调起”两条路径
+  - 模拟支付用于本地验证后续订单流转，三方沙箱用于验证真实支付调用链
