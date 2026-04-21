@@ -12,6 +12,7 @@ public class BookVO {
     private String description;
     private BigDecimal price;
     private BigDecimal originalPrice;
+    private String coverImage;
     private List<String> images;
     private Long categoryId;
     private String categoryName;

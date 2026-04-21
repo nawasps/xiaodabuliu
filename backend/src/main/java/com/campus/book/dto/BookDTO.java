@@ -20,6 +20,8 @@ public class BookDTO {
 
     private BigDecimal originalPrice;
 
+    private String coverImage;
+
     private List<String> images;
 
     @NotNull(message = "分类不能为空")

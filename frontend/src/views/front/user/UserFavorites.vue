@@ -5,7 +5,7 @@
       <div class="book-grid" v-if="books.length > 0">
         <div v-for="book in books" :key="book.id" class="book-card" @click="$router.push(`/book/${book.id}`)">
           <div class="book-cover">
-            <el-image :src="book.images?.[0] || '/placeholder.png'" fit="cover" />
+            <el-image :src="book.coverImage || book.images?.[0] || '/placeholder.png'" fit="cover" />
           </div>
           <div class="book-info">
             <h3 class="text-ellipsis">{{ book.title }}</h3>

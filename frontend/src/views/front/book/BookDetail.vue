@@ -3,7 +3,7 @@
     <div class="page-container" v-if="book">
       <div class="book-header">
         <div class="book-images">
-          <el-image :src="book.images?.[0] || '/placeholder.png'" fit="contain" />
+          <el-image :src="book.coverImage || book.images?.[0] || '/placeholder.png'" fit="contain" />
           <div class="image-list" v-if="book.images?.length > 1">
             <div v-for="(img, index) in book.images" :key="index" class="image-item">
               <el-image :src="img" fit="cover" />

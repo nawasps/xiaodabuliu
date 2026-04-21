@@ -20,6 +20,9 @@ public class Book implements Serializable {
 
     private BigDecimal originalPrice;
 
+    @TableField("`cover_image`")
+    private String coverImage;
+
     private String images;
 
     private Long categoryId;

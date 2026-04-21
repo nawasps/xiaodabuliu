@@ -369,10 +369,15 @@ public class OrderServiceImpl implements OrderService {
             BeanUtils.copyProperties(item, itemVO);
             Book book = bookMapper.selectById(item.getBookId());
             if (book != null) {
-                try {
-                    itemVO.setBookImage(objectMapper.readValue(book.getImages(), new TypeReference<List<String>>() {}).get(0));
-                } catch (Exception e) {
-                    itemVO.setBookImage("");
+                if (StringUtils.hasText(book.getCoverImage())) {
+                    itemVO.setBookImage(book.getCoverImage());
+                } else {
+                    try {
+                        List<String> images = objectMapper.readValue(book.getImages(), new TypeReference<List<String>>() {});
+                        itemVO.setBookImage(images.isEmpty() ? "" : images.get(0));
+                    } catch (Exception e) {
+                        itemVO.setBookImage("");
+                    }
                 }
             }
             return itemVO;

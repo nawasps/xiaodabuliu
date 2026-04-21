@@ -18,7 +18,7 @@
       <div class="order-items mt-20">
         <h3>商品清单</h3>
         <div v-for="item in items" :key="item.id" class="order-item">
-          <el-image :src="item.images?.[0] || '/placeholder.png'" fit="cover" />
+          <el-image :src="item.coverImage || item.images?.[0] || '/placeholder.png'" fit="cover" />
           <div class="item-info">
             <h4>{{ item.title }}</h4>
             <p class="price">¥{{ item.price }}</p>

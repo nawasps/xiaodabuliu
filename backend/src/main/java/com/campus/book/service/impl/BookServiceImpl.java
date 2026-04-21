@@ -81,12 +81,16 @@ public class BookServiceImpl implements BookService {
     public BookVO publish(BookDTO dto) {
         Long userId = SecurityUtils.getCurrentUserId();
         logger.info("发布图书: userId={}, title={}", userId, dto.getTitle());
+        if (!StringUtils.hasText(dto.getCoverImage())) {
+            throw new RuntimeException("请先上传图书封面");
+        }
         
         Book book = new Book();
         book.setTitle(dto.getTitle());
         book.setDescription(dto.getDescription());
         book.setPrice(dto.getPrice());
         book.setOriginalPrice(dto.getOriginalPrice());
+        book.setCoverImage(dto.getCoverImage());
         book.setCategoryId(dto.getCategoryId());
         book.setCondition(dto.getCondition());
         book.setUserId(userId);
@@ -141,6 +145,10 @@ public class BookServiceImpl implements BookService {
         book.setDescription(dto.getDescription());
         book.setPrice(dto.getPrice());
         book.setOriginalPrice(dto.getOriginalPrice());
+        if (!StringUtils.hasText(dto.getCoverImage())) {
+            throw new RuntimeException("请先上传图书封面");
+        }
+        book.setCoverImage(dto.getCoverImage());
         book.setCategoryId(dto.getCategoryId());
         book.setCondition(dto.getCondition());
 

@@ -8,7 +8,7 @@
           <div v-for="item in cartStore.items" :key="item.id" class="cart-item">
             <el-checkbox v-model="item.selected" />
             <div class="item-image">
-              <el-image :src="item.images?.[0] || '/placeholder.png'" fit="cover" />
+              <el-image :src="item.coverImage || item.images?.[0] || '/placeholder.png'" fit="cover" />
             </div>
             <div class="item-info">
               <h3 @click="$router.push(`/book/${item.id}`)">{{ item.title }}</h3>

@@ -42,6 +42,7 @@ CREATE TABLE b_book (
     description TEXT,
     price DECIMAL(10,2) NOT NULL,
     original_price DECIMAL(10,2),
+    cover_image VARCHAR(500),
     images TEXT,
     category_id BIGINT,
     category_name VARCHAR(50),

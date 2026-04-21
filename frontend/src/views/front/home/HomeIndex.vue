@@ -24,7 +24,7 @@
         <div class="book-grid">
           <div v-for="book in hotBooks" :key="book.id" class="book-card" @click="$router.push(`/book/${book.id}`)">
             <div class="book-cover">
-              <el-image :src="book.images?.[0] || '/placeholder.png'" fit="cover" />
+              <el-image :src="book.coverImage || book.images?.[0] || '/placeholder.png'" fit="cover" />
             </div>
             <div class="book-info">
               <h3 class="book-title text-ellipsis">{{ book.title }}</h3>
@@ -46,7 +46,7 @@
         <div class="book-grid">
           <div v-for="book in latestBooks" :key="book.id" class="book-card" @click="$router.push(`/book/${book.id}`)">
             <div class="book-cover">
-              <el-image :src="book.images?.[0] || '/placeholder.png'" fit="cover" />
+              <el-image :src="book.coverImage || book.images?.[0] || '/placeholder.png'" fit="cover" />
             </div>
             <div class="book-info">
               <h3 class="book-title text-ellipsis">{{ book.title }}</h3>
@@ -67,7 +67,7 @@
         <div class="book-grid">
           <div v-for="book in feedBooks" :key="book.id" class="book-card" @click="$router.push(`/book/${book.id}`)">
             <div class="book-cover">
-              <el-image :src="book.images?.[0] || '/placeholder.png'" fit="cover" />
+              <el-image :src="book.coverImage || book.images?.[0] || '/placeholder.png'" fit="cover" />
             </div>
             <div class="book-info">
               <h3 class="book-title text-ellipsis">{{ book.title }}</h3>

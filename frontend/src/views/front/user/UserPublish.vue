@@ -27,6 +27,19 @@
         <el-form-item label="原价">
           <el-input-number v-model="form.originalPrice" :min="0" :precision="2" />
         </el-form-item>
+        <el-form-item label="图书封面" prop="coverImage">
+          <el-upload
+            list-type="picture-card"
+            :file-list="coverFileList"
+            :http-request="handleCoverUpload"
+            :on-remove="handleCoverRemove"
+            :before-upload="beforeImageUpload"
+            :limit="1"
+          >
+            <el-icon><Plus /></el-icon>
+          </el-upload>
+          <div class="upload-tip">封面建议比例 3:4，单张不超过5MB</div>
+        </el-form-item>
         <el-form-item label="标签">
           <el-select v-model="form.tags" multiple placeholder="选择标签">
             <el-option v-for="tag in tags" :key="tag.id" :label="tag.name" :value="tag.name" />
@@ -45,6 +58,10 @@
             <el-icon><Plus /></el-icon>
           </el-upload>
           <div class="upload-tip">最多上传6张，支持 jpg/png/webp，单张不超过5MB</div>
+          <div v-if="failedUploadFiles.length > 0" class="retry-row">
+            <span>有 {{ failedUploadFiles.length }} 张图片上传失败</span>
+            <el-button type="warning" text @click="retryFailedUploads">重试失败上传</el-button>
+          </div>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSubmit" :loading="loading">
@@ -81,23 +98,58 @@ const form = ref({
   condition: '',
   price: 0,
   originalPrice: 0,
+  coverImage: '',
   images: [],
   tags: []
 })
 const categories = ref([])
 const tags = ref([])
+const coverFileList = ref([])
 const imageFileList = ref([])
+const failedUploadFiles = ref([])
 
 const rules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }],
   condition: [{ required: true, message: '请选择新旧程度', trigger: 'change' }],
+  coverImage: [{ required: true, message: '请上传封面图', trigger: 'change' }],
   images: [{ required: true, type: 'array', min: 1, message: '请至少上传1张图片', trigger: 'change' }],
   price: [{ required: true, message: '请输入价格', trigger: 'blur' }]
 }
 
 const syncImageListToForm = () => {
   form.value.images = imageFileList.value.map(item => item.url)
+}
+
+const syncCoverToForm = () => {
+  form.value.coverImage = coverFileList.value[0]?.url || ''
+}
+
+const uploadSingleImage = async (file) => {
+  const res = await uploadBookImage(file)
+  const url = res.data?.url
+  if (!url) {
+    throw new Error('上传失败')
+  }
+  return url
+}
+
+const handleCoverUpload = async (options) => {
+  try {
+    const url = await uploadSingleImage(options.file)
+    coverFileList.value = [{ name: options.file.name, url }]
+    syncCoverToForm()
+    ElMessage.success('封面上传成功')
+    options.onSuccess({ url })
+  } catch (error) {
+    ElMessage.error(error.message || '封面上传失败')
+    options.onError(error)
+  }
+}
+
+const handleCoverRemove = () => {
+  coverFileList.value = []
+  syncCoverToForm()
 }
 
 const beforeImageUpload = (file) => {
@@ -116,16 +168,16 @@ const beforeImageUpload = (file) => {
 
 const handleImageUpload = async (options) => {
   try {
-    const res = await uploadBookImage(options.file)
-    const url = res.data?.url
-    if (!url) {
-      throw new Error('上传失败')
-    }
+    const url = await uploadSingleImage(options.file)
     imageFileList.value.push({ name: options.file.name, url })
+    failedUploadFiles.value = failedUploadFiles.value.filter(item => item.uid !== options.file.uid)
     syncImageListToForm()
     ElMessage.success('图片上传成功')
-    options.onSuccess(res)
+    options.onSuccess({ url })
   } catch (error) {
+    if (!failedUploadFiles.value.some(item => item.uid === options.file.uid)) {
+      failedUploadFiles.value.push(options.file)
+    }
     ElMessage.error(error.message || '图片上传失败')
     options.onError(error)
   }
@@ -133,11 +185,33 @@ const handleImageUpload = async (options) => {
 
 const handleImageRemove = (file) => {
   imageFileList.value = imageFileList.value.filter(item => item.url !== file.url)
+  failedUploadFiles.value = failedUploadFiles.value.filter(item => item.uid !== file.uid)
   syncImageListToForm()
 }
 
 const handleExceed = () => {
   ElMessage.warning('最多上传6张图片')
+}
+
+const retryFailedUploads = async () => {
+  const retryQueue = [...failedUploadFiles.value]
+  if (retryQueue.length === 0) {
+    return
+  }
+  for (const file of retryQueue) {
+    try {
+      const url = await uploadSingleImage(file)
+      imageFileList.value.push({ name: file.name, url })
+      failedUploadFiles.value = failedUploadFiles.value.filter(item => item.uid !== file.uid)
+    } catch (error) {
+    }
+  }
+  syncImageListToForm()
+  if (failedUploadFiles.value.length === 0) {
+    ElMessage.success('失败图片已全部重试成功')
+  } else {
+    ElMessage.warning(`仍有 ${failedUploadFiles.value.length} 张图片上传失败，请稍后重试`)
+  }
 }
 
 const transformCategory = (data) => {
@@ -166,9 +240,13 @@ onMounted(async () => {
           condition: book.condition || '',
           price: book.price || 0,
           originalPrice: book.originalPrice || 0,
+          coverImage: book.coverImage || book.images?.[0] || '',
           images: book.images || [],
           tags: book.tags || []
         }
+        coverFileList.value = form.value.coverImage
+          ? [{ name: 'cover-image', url: form.value.coverImage }]
+          : []
         imageFileList.value = (book.images || []).map((url, index) => ({
           name: `book-image-${index + 1}`,
           url
@@ -195,6 +273,7 @@ const handleSubmit = async () => {
       condition: form.value.condition,
       price: form.value.price,
       originalPrice: form.value.originalPrice,
+      coverImage: form.value.coverImage,
       images: form.value.images,
       tags: form.value.tags
     }
@@ -232,6 +311,15 @@ const handleSubmit = async () => {
   .upload-tip {
     margin-top: 8px;
     color: #8c8c8c;
+    font-size: 12px;
+  }
+
+  .retry-row {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #d46b08;
     font-size: 12px;
   }
 }
