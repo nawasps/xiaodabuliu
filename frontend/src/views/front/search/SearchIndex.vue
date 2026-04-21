@@ -1,5 +1,3 @@
-文件: frontend/src/views/front/search/SearchIndex.vue
-
 <template>
   <div class="search-page">
     <div class="page-container">

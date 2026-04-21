@@ -167,6 +167,12 @@ router.beforeEach((to, from, next) => {
     } else {
       next()
     }
+  } else if (to.path === '/message' || to.path.startsWith('/chat/')) {
+    if (!token) {
+      next('/login')
+    } else {
+      next()
+    }
   } else {
     next()
   }

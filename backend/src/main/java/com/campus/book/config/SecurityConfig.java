@@ -50,7 +50,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/notice/list").permitAll()
             .antMatchers("/upload/**").permitAll()
             .antMatchers("/ws/**").permitAll()
-                .antMatchers("/message/**").permitAll()
+            .antMatchers("/order/pay/alipay/notify", "/order/pay/alipay/return").permitAll()
             .antMatchers("/admin/**").hasRole("ADMIN")
             .anyRequest().authenticated()
             .and()

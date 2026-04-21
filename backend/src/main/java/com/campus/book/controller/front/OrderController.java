@@ -86,6 +86,20 @@ public class OrderController {
         return Result.success(data);
     }
 
+    @PostMapping("/pay/alipay/notify")
+    public String handleAlipayNotify(@RequestParam Map<String, String> params) {
+        return paymentService.handleAlipayNotify(params) ? "success" : "fail";
+    }
+
+    @GetMapping("/pay/alipay/return")
+    public Result<Void> handleAlipayReturn(@RequestParam Map<String, String> params) {
+        boolean ok = paymentService.handleAlipayReturn(params);
+        if (!ok) {
+            return Result.error("支付校验失败，请稍后在订单页刷新状态");
+        }
+        return Result.success();
+    }
+
     @PutMapping("/{id}/ship")
     public Result<Void> shipOrder(@PathVariable Long id, @RequestBody Map<String, String> params) {
         String trackingNo = params.get("trackingNo");

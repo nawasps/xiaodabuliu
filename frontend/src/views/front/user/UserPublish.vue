@@ -222,6 +222,22 @@ const transformCategory = (data) => {
   }))
 }
 
+const findCategoryPath = (tree, targetId, path = []) => {
+  for (const node of tree) {
+    const currentPath = [...path, node.value]
+    if (node.value === targetId) {
+      return currentPath
+    }
+    if (node.children && node.children.length > 0) {
+      const childPath = findCategoryPath(node.children, targetId, currentPath)
+      if (childPath.length > 0) {
+        return childPath
+      }
+    }
+  }
+  return []
+}
+
 onMounted(async () => {
   try {
     const catRes = await getCategoryTree()
@@ -236,13 +252,16 @@ onMounted(async () => {
         form.value = {
           title: book.title || '',
           description: book.description || '',
-          categoryId: book.categoryId,
+          categoryId: findCategoryPath(categories.value, book.categoryId),
           condition: book.condition || '',
           price: book.price || 0,
           originalPrice: book.originalPrice || 0,
           coverImage: book.coverImage || book.images?.[0] || '',
           images: book.images || [],
           tags: book.tags || []
+        }
+        if (!Array.isArray(form.value.categoryId) || form.value.categoryId.length === 0) {
+          form.value.categoryId = book.categoryId
         }
         coverFileList.value = form.value.coverImage
           ? [{ name: 'cover-image', url: form.value.coverImage }]

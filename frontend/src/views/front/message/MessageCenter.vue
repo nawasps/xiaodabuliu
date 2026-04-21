@@ -50,13 +50,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getMessageList, markAsReadByType } from '@/api/message'
 import { useMessageStore } from '@/stores/message'
+import { useUserStore } from '@/stores/user'
 import { connectChatSocket, disconnectChatSocket, getChatSocketClient } from '@/utils/chatSocket'
 
 const messageStore = useMessageStore()
+const userStore = useUserStore()
 const router = useRouter()
 const activeTab = ref('SYSTEM')
 const messages = ref([])
@@ -98,12 +100,21 @@ const bindSocket = () => {
 }
 
 watch(activeTab, (newType) => {
+  if (!userStore.isLoggedIn) {
+    return
+  }
   loadMessages()
   markAsReadByType(newType)
   messageStore.fetchUnreadCount()
 }, { immediate: true })
 
-bindSocket()
+onMounted(() => {
+  if (!userStore.isLoggedIn) {
+    router.push('/login')
+    return
+  }
+  bindSocket()
+})
 
 onBeforeUnmount(() => {
   if (subscription) {

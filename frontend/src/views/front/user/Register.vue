@@ -65,6 +65,7 @@ const codeSending = ref(false)
 const countdown = ref(0)
 const registerType = ref('PHONE')
 let countdownTimer = null
+const emailPattern = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
 const form = reactive({
   username: '',
   password: '',
@@ -100,7 +101,7 @@ const validateEmailByMode = (rule, value, callback) => {
     callback(new Error('请输入邮箱'))
     return
   }
-  if (!/^\w+@\w+\.\w+$/.test(value)) {
+  if (!emailPattern.test(value)) {
     callback(new Error('请输入正确的邮箱'))
     return
   }
@@ -178,7 +179,7 @@ const startCountdown = () => {
 }
 
 const handleSendEmailCode = async () => {
-  if (!form.email || !/^\w+@\w+\.\w+$/.test(form.email)) {
+  if (!form.email || !emailPattern.test(form.email)) {
     ElMessage.warning('请先输入正确的邮箱')
     return
   }

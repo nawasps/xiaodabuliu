@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+    private static final String EMAIL_PATTERN = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
 
     @Autowired
     private UserMapper userMapper;
@@ -243,7 +244,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public void sendEmailVerifyCode(String email) {
-        if (!StringUtils.hasText(email) || !email.matches("^\\w+@\\w+\\.\\w+$")) {
+        if (!StringUtils.hasText(email) || !email.matches(EMAIL_PATTERN)) {
             throw new RuntimeException("请输入正确的邮箱");
         }
         if (isEmailExists(email)) {
@@ -266,6 +267,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             mailSender.send(message);
             logger.info("邮箱验证码发送成功: email={}", email);
         } catch (Exception e) {
+            stringRedisTemplate.delete(cacheKey);
             logger.error("邮箱验证码发送失败: email={}, error={}", email, e.getMessage());
             throw new RuntimeException("验证码发送失败，请稍后重试");
         }

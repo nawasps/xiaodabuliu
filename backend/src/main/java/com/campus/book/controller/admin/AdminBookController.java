@@ -10,11 +10,16 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin/book")
 public class AdminBookController {
+
+    private static final Set<String> AUDIT_STATUS_SET = new HashSet<>(Arrays.asList("ON_SALE", "OFFLINE"));
 
     @Autowired
     private BookService bookService;
@@ -71,6 +76,9 @@ public class AdminBookController {
     }
     @PutMapping("/{id}/audit")
     public Result<Void> auditBook(@PathVariable Long id, @RequestParam String status) {
+        if (!AUDIT_STATUS_SET.contains(status)) {
+            return Result.error("审核状态不合法，仅支持 ON_SALE 或 OFFLINE");
+        }
         Book book = bookMapper.selectById(id);
         if (book == null) {
             return Result.error("商品不存在");
