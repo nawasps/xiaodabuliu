@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -38,6 +39,9 @@ public class MessageServiceImpl implements MessageService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired(required = false)
+    private SimpMessagingTemplate simpMessagingTemplate;
+
     @Override
     public Message sendMessage(MessageDTO dto) {
         Long userId = SecurityUtils.getCurrentUserId();
@@ -58,6 +62,7 @@ public class MessageServiceImpl implements MessageService {
         }
 
         messageMapper.insert(message);
+        pushRealtimeMessage(message);
         return message;
     }
 
@@ -70,6 +75,7 @@ public class MessageServiceImpl implements MessageService {
         message.setToUserId(toUserId);
         message.setIsRead(false);
         messageMapper.insert(message);
+        pushRealtimeMessage(message);
         return message;
     }
 
@@ -177,5 +183,16 @@ public class MessageServiceImpl implements MessageService {
             vo.setImages(new ArrayList<>());
         }
         return vo;
+    }
+
+    private void pushRealtimeMessage(Message message) {
+        if (simpMessagingTemplate == null || message == null || message.getToUserId() == null) {
+            return;
+        }
+        MessageVO messageVO = convertToVO(message);
+        simpMessagingTemplate.convertAndSend("/topic/message/" + message.getToUserId(), messageVO);
+        if (Constants.MESSAGE_TYPE_PRIVATE.equals(message.getType())) {
+            simpMessagingTemplate.convertAndSend("/topic/chat/" + message.getToUserId(), messageVO);
+        }
     }
 }

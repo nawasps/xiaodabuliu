@@ -16,7 +16,7 @@
             <el-avatar :src="book.sellerAvatar" />
             <span>{{ book.sellerNickname }}</span>
             <span class="credit">信用: {{ book.sellerCreditScore }}</span>
-            <el-button size="small" @click="handleSendMessage">发私信</el-button>
+             <el-button size="small" @click="handleSendMessage">实时聊天</el-button>
           </div>
           <div class="price-section">
             <span class="current-price">
@@ -63,13 +63,6 @@
           </el-tab-pane>
         </el-tabs>
       </div>
-      <el-dialog v-model="messageDialogVisible" title="发私信" width="400px">
-        <el-input v-model="messageContent" type="textarea" rows="4" placeholder="请输入私信内容" />
-        <template #footer>
-          <el-button @click="messageDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitMessage">发送</el-button>
-        </template>
-      </el-dialog>
     </div>
   </div>
 </template>
@@ -83,7 +76,6 @@ import { addToCart } from '@/api/cart'
 import { getBookReviews } from '@/api/review'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
-import { sendPrivateMessage } from '@/api/message'
 import request from '@/utils/request'
 
 const route = useRoute()
@@ -92,8 +84,6 @@ const userStore = useUserStore()
 const cartStore = useCartStore()
 const book = ref(null)
 const reviews = ref([])
-const messageDialogVisible = ref(false)
-const messageContent = ref('')
 const favoriteLoading = ref(false)
 
 onMounted(async () => {
@@ -212,25 +202,7 @@ const handleSendMessage = async () => {
     router.push('/login')
     return
   }
-  messageContent.value = ''
-  messageDialogVisible.value = true
-}
-
-const submitMessage = async () => {
-  if (!messageContent.value?.trim()) {
-    ElMessage.warning('请输入私信内容')
-    return
-  }
-  try {
-    await sendPrivateMessage({
-      toUserId: book.value.userId,
-      content: messageContent.value
-    })
-    ElMessage.success('发送成功')
-    messageDialogVisible.value = false
-  } catch (error) {
-    ElMessage.error(error.message || '发送失败')
-  }
+  router.push({ path: `/chat/${book.value.userId}`, query: { name: book.value.sellerNickname } })
 }
 </script>
 

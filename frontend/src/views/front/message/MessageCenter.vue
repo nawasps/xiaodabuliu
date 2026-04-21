@@ -36,7 +36,7 @@
             <div v-for="msg in messages" :key="msg.id" class="message-item" :class="{ unread: !msg.isRead }">
               <div class="message-header">
                 <span class="sender">{{ msg.fromUsername || '用户' }}</span>
-                <el-button size="small" type="primary" @click="handleReply(msg)">回复</el-button>
+                <el-button size="small" type="primary" @click="handleReply(msg)">进入聊天</el-button>
               </div>
               <p>{{ msg.content }}</p>
               <span class="time">{{ msg.createTime }}</span>
@@ -46,28 +46,22 @@
         </el-tab-pane>
       </el-tabs>
     </div>
-    <el-dialog v-model="replyDialogVisible" title="回复私信" width="400px">
-      <el-input v-model="replyContent" type="textarea" rows="4" placeholder="请输入回复内容" />
-      <template #footer>
-        <el-button @click="replyDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitReply">发送</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { getMessageList, markAsReadByType, sendPrivateMessage } from '@/api/message'
+import { ref, computed, onBeforeUnmount, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { getMessageList, markAsReadByType } from '@/api/message'
 import { useMessageStore } from '@/stores/message'
-import { ElMessage } from 'element-plus'
+import { connectChatSocket, disconnectChatSocket, getChatSocketClient } from '@/utils/chatSocket'
 
 const messageStore = useMessageStore()
+const router = useRouter()
+const currentUserId = Number(JSON.parse(localStorage.getItem('userInfo') || '{}')?.id || 0)
 const activeTab = ref('SYSTEM')
 const messages = ref([])
-const replyDialogVisible = ref(false)
-const replyContent = ref('')
-const replyToUserId = ref(null)
+let subscription = null
 
 const systemUnread = computed(() => messageStore.unreadCount.SYSTEM || 0)
 const orderUnread = computed(() => messageStore.unreadCount.ORDER || 0)
@@ -83,27 +77,25 @@ const loadMessages = async () => {
 }
 
 const handleReply = (msg) => {
-  replyToUserId.value = msg.fromUserId
-  replyContent.value = ''
-  replyDialogVisible.value = true
+  router.push({ path: `/chat/${msg.fromUserId}`, query: { name: msg.fromUsername || '用户' } })
 }
 
-const submitReply = async () => {
-  if (!replyContent.value?.trim()) {
-    ElMessage.warning('请输入回复内容')
+const bindSocket = () => {
+  if (!currentUserId) {
     return
   }
-  try {
-    await sendPrivateMessage({
-      toUserId: replyToUserId.value,
-      content: replyContent.value
+  connectChatSocket((client) => {
+    if (subscription) {
+      subscription.unsubscribe()
+      subscription = null
+    }
+    subscription = client.subscribe(`/topic/message/${currentUserId}`, async () => {
+      await messageStore.fetchUnreadCount()
+      if (activeTab.value === 'PRIVATE') {
+        await loadMessages()
+      }
     })
-    ElMessage.success('发送成功')
-    replyDialogVisible.value = false
-    loadMessages()
-  } catch (error) {
-    ElMessage.error(error.message || '发送失败')
-  }
+  })
 }
 
 watch(activeTab, (newType) => {
@@ -111,6 +103,19 @@ watch(activeTab, (newType) => {
   markAsReadByType(newType)
   messageStore.fetchUnreadCount()
 }, { immediate: true })
+
+bindSocket()
+
+onBeforeUnmount(() => {
+  if (subscription) {
+    subscription.unsubscribe()
+    subscription = null
+  }
+  const client = getChatSocketClient()
+  if (client && client.connected) {
+    disconnectChatSocket()
+  }
+})
 </script>
 
 <style scoped lang="scss">

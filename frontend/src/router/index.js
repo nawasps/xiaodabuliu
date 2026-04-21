@@ -74,6 +74,11 @@ const routes = [
         path: 'message',
         name: 'MessageCenter',
         component: () => import('@/views/front/message/MessageCenter.vue')
+      },
+      {
+        path: 'chat/:userId',
+        name: 'ChatRoom',
+        component: () => import('@/views/front/message/ChatRoom.vue')
       }
     ]
   },

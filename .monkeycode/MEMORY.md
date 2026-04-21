@@ -87,3 +87,12 @@ Agent 在任务执行过程中发现的条目应遵循以下格式：
 - Instructions:
   - 图书上传需支持“封面图 + 多张详情图”并统一存储到 OSS
   - 前端上传失败需支持重试机制
+
+[实时聊天实现方式]
+- Date: 2026-04-21
+- Context: Agent 在执行“新增实时聊天功能”时发现
+- Category: 代码模式
+- Instructions:
+  - 后端采用 Spring WebSocket + STOMP，端点为 `/ws`，推送频道为 `/topic/message/{userId}` 与 `/topic/chat/{userId}`
+  - 前端采用 `@stomp/stompjs + sockjs-client`，在聊天页与消息中心订阅用户频道实现实时更新
+  - 聊天消息仍复用现有 `b_message` 表存储，不新增数据库表
