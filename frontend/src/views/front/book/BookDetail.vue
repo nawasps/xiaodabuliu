@@ -188,6 +188,8 @@ const handleFeedback = async () => {
   try {
     await request.post('/report', {
       type: 'FEEDBACK',
+      reportedUserId: book.value.userId,
+      bookId: book.value.id,
       reason: 'FEEDBACK',
       description: content
     })
