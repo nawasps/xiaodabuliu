@@ -18,6 +18,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.mail.MailAuthenticationException;
+import org.springframework.mail.MailException;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -244,6 +247,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public void sendEmailVerifyCode(String email) {
+        email = email == null ? null : email.trim();
         if (!StringUtils.hasText(email) || !email.matches(EMAIL_PATTERN)) {
             throw new RuntimeException("请输入正确的邮箱");
         }
@@ -266,10 +270,22 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             message.setText("您的注册验证码是：" + code + "，5分钟内有效。如非本人操作请忽略。");
             mailSender.send(message);
             logger.info("邮箱验证码发送成功: email={}", email);
+        } catch (MailAuthenticationException e) {
+            stringRedisTemplate.delete(cacheKey);
+            logger.error("邮箱验证码发送失败(认证失败): email={}, error={}", email, e.getMessage());
+            throw new RuntimeException("邮件服务认证失败，请检查邮箱账号/SMTP授权码配置");
+        } catch (MailSendException e) {
+            stringRedisTemplate.delete(cacheKey);
+            logger.error("邮箱验证码发送失败(发送失败): email={}, error={}", email, e.getMessage());
+            throw new RuntimeException("邮件发送失败，请检查收件邮箱地址或SMTP服务配置");
+        } catch (MailException e) {
+            stringRedisTemplate.delete(cacheKey);
+            logger.error("邮箱验证码发送失败(MailException): email={}, error={}", email, e.getMessage());
+            throw new RuntimeException("邮件服务异常，请检查SMTP主机/端口/SSL配置");
         } catch (Exception e) {
             stringRedisTemplate.delete(cacheKey);
             logger.error("邮箱验证码发送失败: email={}, error={}", email, e.getMessage());
-            throw new RuntimeException("验证码发送失败，请稍后重试");
+            throw new RuntimeException("验证码发送失败，请检查邮件配置后重试");
         }
     }
 

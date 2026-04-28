@@ -97,8 +97,13 @@ const handleRealPay = async () => {
     if (!payWindow) {
       throw new Error('浏览器拦截了弹窗，请允许弹窗后重试')
     }
-    payWindow.document.write(payForm)
-    payWindow.document.close()
+
+    if (/^https?:\/\//i.test(payForm)) {
+      payWindow.location.href = payForm
+    } else {
+      payWindow.document.write(payForm)
+      payWindow.document.close()
+    }
 
     ElMessage.success('已调起支付宝沙箱支付页面')
   } catch (error) {

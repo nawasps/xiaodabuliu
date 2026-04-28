@@ -22,7 +22,7 @@
           <el-input v-model="form.phone" placeholder="手机号" size="large" />
         </el-form-item>
         <el-form-item prop="email">
-          <el-input v-model="form.email" placeholder="邮箱（选填）" size="large" />
+          <el-input v-model="form.email" :placeholder="emailPlaceholder" size="large" />
         </el-form-item>
         <el-form-item v-if="registerType === 'EMAIL'" prop="verifyCode">
           <el-input v-model="form.verifyCode" placeholder="请输入邮箱验证码" size="large">
@@ -51,7 +51,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
@@ -75,6 +75,8 @@ const form = reactive({
   nickname: '',
   verifyCode: ''
 })
+
+const emailPlaceholder = computed(() => registerType.value === 'EMAIL' ? '邮箱（必填）' : '邮箱（选填）')
 
 const validatePhoneByMode = (rule, value, callback) => {
   if (registerType.value !== 'PHONE') {

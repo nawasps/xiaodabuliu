@@ -29,7 +29,7 @@ export function sendVerifyCode(phone) {
 }
 
 export function sendEmailVerifyCode(email) {
-  return request.post('/user/sendEmailCode', { email })
+  return request.post('/user/sendEmailCode', { email }, { timeout: 30000 })
 }
 
 export function resetPassword(data) {
