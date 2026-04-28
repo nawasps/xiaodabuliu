@@ -133,7 +133,27 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public boolean handleAlipayReturn(Map<String, String> params) {
-        return handleAlipayCallback(params);
+        if (handleAlipayCallback(params)) {
+            return true;
+        }
+
+        if (params == null || params.isEmpty()) {
+            return false;
+        }
+
+        String orderNo = params.get("out_trade_no");
+        if (!StringUtils.hasText(orderNo)) {
+            return false;
+        }
+
+        Order order = orderMapper.selectOne(new LambdaQueryWrapper<Order>().eq(Order::getOrderNo, orderNo));
+        if (order == null) {
+            return false;
+        }
+
+        return Constants.ORDER_STATUS_PAID.equals(order.getStatus())
+                || Constants.ORDER_STATUS_SHIPPED.equals(order.getStatus())
+                || Constants.ORDER_STATUS_COMPLETED.equals(order.getStatus());
     }
 
     private boolean handleAlipayCallback(Map<String, String> params) {
