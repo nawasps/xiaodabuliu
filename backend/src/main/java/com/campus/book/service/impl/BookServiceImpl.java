@@ -52,6 +52,11 @@ public class BookServiceImpl implements BookService {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    private void clearBookCache() {
+        redisTemplate.delete(Constants.BOOK_CACHE_KEY + "hot");
+    }
+
     @Override
     public Page<BookVO> getFeedBooks(Long userId) {
         List<String> preferenceTags = getUserPreferenceTags(userId);
@@ -123,6 +128,7 @@ public class BookServiceImpl implements BookService {
         book.setIsRecommended(0);
 
         bookMapper.insert(book);
+        clearBookCache();
         
         LogUtils.logBusiness(logger, userId, "发布", "图书", 
             String.format("书名: %s, 价格: %.2f", dto.getTitle(), dto.getPrice()));
@@ -174,6 +180,7 @@ public class BookServiceImpl implements BookService {
         }
 
         bookMapper.updateById(book);
+        clearBookCache();
         return convertToVO(book);
     }
 
@@ -194,6 +201,7 @@ public class BookServiceImpl implements BookService {
         }
         
         bookMapper.deleteById(id);
+        clearBookCache();
         
         LogUtils.logBusiness(logger, userId, "删除", "图书", 
             String.format("图书ID: %d, 书名: %s", id, book.getTitle()));
@@ -427,6 +435,7 @@ public class BookServiceImpl implements BookService {
 
         book.setStatus(status);
         bookMapper.updateById(book);
+        clearBookCache();
     }
 
     @Override

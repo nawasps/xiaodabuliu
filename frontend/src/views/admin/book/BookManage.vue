@@ -91,11 +91,13 @@ const handleAudit = async (row) => {
     })
     await request.put(`/admin/book/${row.id}/audit`, null, { params: { status: 'ON_SALE' } })
     ElMessage.success('审核通过')
+    window.dispatchEvent(new Event('refresh-admin-stats'))
     loadBooks()
   } catch (error) {
     if (error === 'cancel') {
       await request.put(`/admin/book/${row.id}/audit`, null, { params: { status: 'OFFLINE' } })
       ElMessage.success('已驳回并下架')
+      window.dispatchEvent(new Event('refresh-admin-stats'))
       loadBooks()
     }
   }
@@ -105,6 +107,7 @@ const handleOffline = async (row) => {
   await ElMessageBox.confirm('确定下架该商品？', '下架')
   await request.put(`/admin/book/${row.id}/offline`)
   ElMessage.success('已下架')
+  window.dispatchEvent(new Event('refresh-admin-stats'))
   loadBooks()
 }
 

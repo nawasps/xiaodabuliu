@@ -2,6 +2,7 @@ package com.campus.book.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.book.common.result.Result;
+import com.campus.book.common.constants.Constants;
 import com.campus.book.entity.Book;
 import com.campus.book.mapper.BookMapper;
 import com.campus.book.service.BookService;
@@ -66,12 +67,7 @@ public class AdminBookController {
     }
     @PutMapping("/{id}/offline")
     public Result<Void> offlineBook(@PathVariable Long id) {
-        Book book = bookMapper.selectById(id);
-        if (book == null) {
-            return Result.error("商品不存在");
-        }
-        book.setStatus("OFFLINE");
-        bookMapper.updateById(book);
+        bookService.updateBookStatus(id, Constants.STATUS_OFFLINE);
         return Result.success();
     }
     @PutMapping("/{id}/audit")
@@ -83,8 +79,7 @@ public class AdminBookController {
         if (book == null) {
             return Result.error("商品不存在");
         }
-        book.setStatus(status);
-        bookMapper.updateById(book);
+        bookService.updateBookStatus(id, status);
         return Result.success();
     }
 }

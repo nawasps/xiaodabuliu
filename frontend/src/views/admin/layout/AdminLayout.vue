@@ -15,8 +15,10 @@
           <span>用户管理</span>
         </el-menu-item>
         <el-menu-item index="/admin/book">
-          <el-icon><Goods /></el-icon>
-          <span>商品管理</span>
+          <el-badge :value="pendingBooks" :hidden="pendingBooks === 0" type="warning">
+            <el-icon><Goods /></el-icon>
+            <span>商品管理</span>
+          </el-badge>
         </el-menu-item>
         <el-menu-item index="/admin/order">
           <el-icon><Tickets /></el-icon>
@@ -55,6 +57,9 @@
       <header class="topbar">
         <h3>{{ pageTitle }}</h3>
         <div class="user-info">
+          <el-badge :value="pendingBooks" :hidden="pendingBooks === 0" type="warning" class="report-badge">
+            <el-button size="small" @click="$router.push('/admin/book')">待审核商品 {{ pendingBooks }}</el-button>
+          </el-badge>
           <el-badge :value="pendingReports" :hidden="pendingReports === 0" type="danger" class="report-badge">
             <el-button size="small" @click="$router.push('/admin/report')">举报 {{ pendingReports }}</el-button>
           </el-badge>
@@ -69,7 +74,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
@@ -79,11 +84,14 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const pendingReports = ref(0)
+const pendingBooks = ref(0)
+let statsTimer = null
 
 const loadPendingReports = async () => {
   try {
     const res = await request.get('/admin/dashboard/stats')
     pendingReports.value = res.data?.pendingReports || 0
+    pendingBooks.value = res.data?.pendingBooks || 0
   } catch (error) {
     console.error('Failed to load stats:', error)
   }
@@ -91,7 +99,16 @@ const loadPendingReports = async () => {
 
 onMounted(() => {
   loadPendingReports()
+  statsTimer = window.setInterval(loadPendingReports, 30000)
   window.addEventListener('refresh-admin-stats', loadPendingReports)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('refresh-admin-stats', loadPendingReports)
+  if (statsTimer) {
+    window.clearInterval(statsTimer)
+    statsTimer = null
+  }
 })
 
 const pageTitle = computed(() => {
