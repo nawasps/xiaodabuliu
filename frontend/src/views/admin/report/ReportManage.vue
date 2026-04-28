@@ -14,9 +14,10 @@
               <el-tag :type="row.status === 'PENDING' ? 'warning' : 'success'">{{ row.status }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="150">
+          <el-table-column label="操作" width="220">
             <template #default="{ row }">
               <el-button size="small" v-if="row.status === 'PENDING'" @click="handleReport(row)">处理</el-button>
+              <el-button size="small" :disabled="!row.bookId" @click="goToBookDetail(row.bookId)">商品详情</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -26,8 +27,14 @@
           <el-table-column prop="id" label="ID" width="80" />
           <el-table-column prop="reportUsername" label="反馈人" />
           <el-table-column prop="description" label="反馈内容" show-overflow-tooltip />
+          <el-table-column prop="bookTitle" label="关联商品" show-overflow-tooltip />
           <el-table-column prop="status" label="状态" />
           <el-table-column prop="createTime" label="时间" />
+          <el-table-column label="操作" width="140">
+            <template #default="{ row }">
+              <el-button size="small" :disabled="!row.bookId" @click="goToBookDetail(row.bookId)">商品详情</el-button>
+            </template>
+          </el-table-column>
         </el-table>
       </el-tab-pane>
     </el-tabs>
@@ -36,13 +43,23 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
 
+const router = useRouter()
 const activeTab = ref('report')
 const reports = ref([])
 const feedbacks = ref([])
 const loading = ref(false)
+
+const goToBookDetail = (bookId) => {
+  if (!bookId) {
+    ElMessage.warning('该反馈未关联商品')
+    return
+  }
+  router.push(`/book/${bookId}`)
+}
 
 const loadReports = async () => {
   loading.value = true

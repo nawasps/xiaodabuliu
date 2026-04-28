@@ -25,8 +25,9 @@
           <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="200">
+      <el-table-column label="操作" width="260">
         <template #default="{ row }">
+          <el-button size="small" @click="goToBookDetail(row)">详情</el-button>
           <el-button size="small" @click="handleAudit(row)">审核</el-button>
           <el-button size="small" type="danger" @click="handleOffline(row)">下架</el-button>
         </template>
@@ -44,10 +45,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
 
+const router = useRouter()
 const keyword = ref('')
 const status = ref('')
 const books = ref([])
@@ -79,6 +82,10 @@ const loadBooks = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const goToBookDetail = (row) => {
+  router.push(`/book/${row.id}`)
 }
 
 const handleAudit = async (row) => {
