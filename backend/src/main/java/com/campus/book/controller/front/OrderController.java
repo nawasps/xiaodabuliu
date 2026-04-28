@@ -11,6 +11,7 @@ import com.campus.book.vo.OrderVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -91,13 +92,21 @@ public class OrderController {
         return paymentService.handleAlipayNotify(params) ? "success" : "fail";
     }
 
-    @GetMapping("/pay/alipay/return")
-    public Result<Void> handleAlipayReturn(@RequestParam Map<String, String> params) {
+    @GetMapping(value = "/pay/alipay/return", produces = MediaType.TEXT_HTML_VALUE)
+    public String handleAlipayReturn(@RequestParam Map<String, String> params) {
         boolean ok = paymentService.handleAlipayReturn(params);
         if (!ok) {
-            return Result.error("支付校验失败，请稍后在订单页刷新状态");
+            return "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>支付结果</title></head>"
+                    + "<body style='font-family:Arial,sans-serif;padding:24px;'>"
+                    + "<h3>支付结果处理中</h3>"
+                    + "<p>支付校验未即时完成，请返回订单页刷新状态。</p>"
+                    + "</body></html>";
         }
-        return Result.success();
+        return "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>支付成功</title></head>"
+                + "<body style='font-family:Arial,sans-serif;padding:24px;'>"
+                + "<h3>支付成功</h3>"
+                + "<p>订单状态已更新，请返回订单列表查看。</p>"
+                + "</body></html>";
     }
 
     @PutMapping("/{id}/ship")
